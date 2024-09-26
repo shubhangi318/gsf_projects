@@ -207,3 +207,29 @@ WHERE
     AND json_data.product->>'name' IS NOT NULL;
 ```
 
+Project Description </br> The details related to project descriptions are stored in this table. It can be populated with the following command:
+
+```sql
+INSERT INTO gsf_reg.proj_desc (
+    description,
+    project_developer,
+    annual_est_credits,
+    project_scale,
+    methodology,
+    credit_period_start_date,
+    credit_period_end_date,
+    proj_hash
+)
+SELECT
+    description,
+    project_developer,
+    estimated_annual_credits,
+    size AS project_scale,
+    methodology,
+    crediting_period_start_date AS credit_period_start_date,
+    crediting_period_end_date AS credit_period_end_date,
+    hsh AS proj_hash
+FROM
+    gsf_reg.main_proj_details
+ON CONFLICT (proj_hash) DO NOTHING; -- Avoid duplicates in case of conflict
+```
