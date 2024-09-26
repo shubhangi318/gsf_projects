@@ -1,6 +1,6 @@
 # PSQL Commands to Store and Normalize Data
 
-This repository contains PostgreSQL (PSQL) commands used for creating schemas, tables, and managing data insertion and normalization.
+This readme contains PostgreSQL (PSQL) commands used for creating schemas, tables, and managing data insertion and normalization.
 
 ## Table of Contents
 1. [Schema Creation](#schema-creation)
