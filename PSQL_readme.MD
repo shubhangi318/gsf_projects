@@ -8,7 +8,6 @@ This readme contains PostgreSQL (PSQL) commands used for creating schemas, table
    - [Main Project Details](#main-project-details)
    - [Sustainable Development Goals](#sustainable-development-goals)
    - [Link Table](#link-table)
-   - [Project Description](#project-description)
 3. [Data Insertion](#data-insertion)
 4. [Normalization](#normalization)
 5. [Project Description](#project-description-population)
@@ -78,33 +77,13 @@ CREATE TABLE gsf_reg.sust_goal_link (
 );
 
 ```
-Project Description
-
-```sql
-CREATE TABLE gsf_reg.proj_desc (
-    description              CHARACTER VARYING,
-    project_developer        CHARACTER VARYING,
-    annual_est_credits       INTEGER,
-    project_scale            CHARACTER VARYING,
-    methodology              CHARACTER VARYING,
-    credit_period_start_date TIMESTAMP WITHOUT TIME ZONE,
-    credit_period_end_date   TIMESTAMP WITHOUT TIME ZONE,
-    proj_hash                CHARACTER VARYING,
-
-    -- Define the unique constraint
-    CONSTRAINT proj_desc_proj_hash_key UNIQUE (proj_hash)
-);
-
--- Create an index on the proj_hash column
-CREATE INDEX idx_proj_desc_proj_hash ON gsf_reg.proj_desc(proj_hash);
-```
 
 ## Data Insertion
 
 After extracting the project details into main_project.csv, use the following command to insert the data into the main_proj_details table:
 
 ```sql
-\copy gsf_reg.main_proj_details(id, created_at, updated_at, name, description, status, gsf_standards_version, estimated_annual_credits, crediting_period_start_date, crediting_period_end_date, methodology, type, size, sustaincert_id, sustaincert_url, project_developer, carbon_stream, country, country_code, state, programme_of_activities, poa_project_id, poa_project_sustaincert_id, poa_project_name, sustainable_development_goals, labels, hsh) 
+\copy gsf_reg.main_proj_details(id, created_at, updated_at, name, description, status, gsf_standards_version, estimated_annual_credits, crediting_period_start_date, crediting_period_end_date, methodology, type, size, sustaincert_id, sustaincert_url, project_developer, carbon_stream, country, country_code, state, programme_of_activities, poa_project_id, poa_project_sustaincert_id, poa_project_name, sustainable_development_goals, labels, hsh, attached_certificate_files) 
 FROM '/home/shubhangi.bhatia/Desktop/calyx/main_project_details.csv' 
 WITH (FORMAT csv, HEADER true, DELIMITER ',', NULL '');
 ```
@@ -141,29 +120,19 @@ JOIN
 
 ## Project Description
 
-The details related to project descriptions are stored in this table. It can be populated with the following command:
+The details related to project descriptions are stored in this view. It can be created with the following command:
 
 ```sql
-INSERT INTO gsf_reg.proj_desc (
-    description,
-    project_developer,
-    annual_est_credits,
-    project_scale,
-    methodology,
-    credit_period_start_date,
-    credit_period_end_date,
-    proj_hash
-)
+CREATE VIEW gsf_reg.proj_desc AS
 SELECT
     description,
     project_developer,
-    estimated_annual_credits,
+    estimated_annual_credits AS annual_est_credits,
     size AS project_scale,
     methodology,
     crediting_period_start_date AS credit_period_start_date,
     crediting_period_end_date AS credit_period_end_date,
     hsh AS proj_hash
 FROM
-    gsf_reg.main_proj_details
-ON CONFLICT (proj_hash) DO NOTHING; -- Avoid duplicates in case of conflict
+    gsf_reg.main_proj_details; 
 ```
