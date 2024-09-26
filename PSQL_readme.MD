@@ -52,7 +52,8 @@ CREATE TABLE gsf_reg.main_proj_details (
     poa_project_name              CHARACTER VARYING,
     sustainable_development_goals  JSONB,
     labels                        JSONB,
-    hsh                           CHARACTER VARYING
+    hsh                           CHARACTER VARYING,
+    attached_certificate_files    JSONB
 );
 
 -- Create an index on the hsh column
