@@ -129,7 +129,7 @@ WITH (FORMAT csv, HEADER true, DELIMITER ',', NULL '');
 
 ## Normalization
 
-In this section, we will populate the `proj_details` table with a subset of necessary details from the `main_proj_details` table. The following SQL command is used to insert the data:
+The following SQL command is used to populate the `proj_details` table with a subset of necessary details from the `main_proj_details` table:
 
 ```sql
 INSERT INTO gsf_reg.proj_details (gs_id, proj_name, proj_status, proj_type, country, hsh)
@@ -146,6 +146,64 @@ WHERE
     hsh IS NOT NULL;
 ```
 
-Inserting Sustainable Development Goals
+### Inserting Sustainable Development Goals
+
 The goals from the sustainable_development_goals column in the main_proj_details table will be inserted into the sust_goals table, and each goal will have a unique sequential issue_id and proj_hash that links it back to the main table.
+
+Sustainable Development Goals
+
+```sql
+WITH goals AS (
+    SELECT
+        goal->>'name' AS name,
+        main.hsh AS proj_hash  -- Ensure we're getting hsh from the main_proj_details
+    FROM
+        gsf_reg.main_proj_details AS main,
+        jsonb_array_elements(main.sustainable_development_goals::jsonb) AS goal
+),
+numbered_goals AS (
+    SELECT
+        name,
+        proj_hash,
+        ROW_NUMBER() OVER (PARTITION BY proj_hash ORDER BY name) AS issue_id
+    FROM
+        goals
+)
+INSERT INTO gsf_reg.sust_goals (name, proj_hash, issue_id)
+SELECT
+    name,
+    proj_hash,
+    issue_id
+FROM
+    numbered_goals;
+```
+Issuable Products
+
+```sql
+WITH json_data AS (
+    SELECT
+        main_proj.hsh AS proj_hash,
+        goal->>'name' AS goal_name,
+        jsonb_array_elements(goal->'issuable_products') AS product
+    FROM
+        gsf_reg.main_proj_details main_proj,
+        jsonb_array_elements(main_proj.sustainable_development_goals::jsonb) AS goal
+)
+INSERT INTO gsf_reg.sust_issuable_products (issue_id, name, abbr, proj_hash)
+SELECT
+    sust.issue_id,
+    json_data.product->>'name' AS name,
+    json_data.product->>'abbreviation' AS abbr,
+    json_data.proj_hash
+FROM
+    json_data
+JOIN
+    gsf_reg.sust_goals sust
+ON
+    json_data.proj_hash = sust.proj_hash
+    AND json_data.goal_name = sust.name
+WHERE
+    json_data.product IS NOT NULL
+    AND json_data.product->>'name' IS NOT NULL;
+```
 
