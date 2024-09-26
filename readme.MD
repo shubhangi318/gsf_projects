@@ -58,3 +58,25 @@ CREATE TABLE gsf_reg.main_proj_details (
 
 -- Create an index on the hsh column
 CREATE INDEX idx_hsh ON gsf_reg.main_proj_details(hsh);
+```
+Project Details
+
+```sql
+CREATE TABLE gsf_reg.proj_details (
+    gs_id       CHARACTER VARYING NOT NULL,
+    proj_name   CHARACTER VARYING,
+    proj_status CHARACTER VARYING,
+    proj_type   CHARACTER VARYING,
+    country     CHARACTER VARYING,
+    hsh         CHARACTER VARYING,
+    
+    -- Define the primary key
+    CONSTRAINT proj_details_pkey PRIMARY KEY (gs_id),
+    
+    -- Define the unique constraint
+    CONSTRAINT proj_details_hsh_key UNIQUE (hsh)
+);
+```
+Sustainable Development Goals
+
+
