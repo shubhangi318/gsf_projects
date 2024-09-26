@@ -11,6 +11,7 @@ This readme contains PostgreSQL (PSQL) commands used for creating schemas, table
    - [Project Description](#project-description)
 3. [Data Insertion](#data-insertion)
 4. [Normalization](#normalization)
+5. Project Description
 
 ## Schema Creation
 
@@ -138,9 +139,9 @@ JOIN
     ON goals_data.goal_name = goals_details.goal_name;
 ```
 
-### Populating description table
+## Project Description
 
-Project Description </br> The details related to project descriptions are stored in this table. It can be populated with the following command:
+The details related to project descriptions are stored in this table. It can be populated with the following command:
 
 ```sql
 INSERT INTO gsf_reg.proj_desc (
