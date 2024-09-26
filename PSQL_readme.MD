@@ -6,10 +6,9 @@ This readme contains PostgreSQL (PSQL) commands used for creating schemas, table
 1. [Schema Creation](#schema-creation)
 2. [Table Definitions](#table-definitions)
    - [Main Project Details](#main-project-details)
-   - [Project Details](#project-details)
-   - [Project Description](#project-description)
    - [Sustainable Development Goals](#sustainable-development-goals)
-   - [Issuable Products](#issuable-products)
+   - [Link Table](#link-table)
+   - [Project Description](#project-description)
 3. [Data Insertion](#data-insertion)
 4. [Normalization](#normalization)
 
