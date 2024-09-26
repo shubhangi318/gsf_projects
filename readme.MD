@@ -19,6 +19,7 @@ To create the schema `gsf_reg`, execute the following command:
 
 ```sql
 CREATE SCHEMA gsf_reg;
+```
 
 ## Table Definitions
 
