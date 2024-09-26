@@ -112,7 +112,7 @@ WITH (FORMAT csv, HEADER true, DELIMITER ',', NULL '');
 The scraper also extracts the unique sustainability development goals across all projects and saves to the csv file named 'goals.csv' in the working folder. Use the following command to insert that data into the table sust_goals_details:
 
 ```sql
-\copy gsf_reg.sust_goals_details(goal_name, issuable_products) FROM '/home/shubhangi.bhatia/Desktop/calyx/goals.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',', NULL '');
+\copy gsf_reg.sust_goals_details(goal_name, issuable_products, goal_id) FROM '/home/shubhangi.bhatia/Desktop/calyx/goals.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',', NULL '');
 ```
 
 ## Normalization
