@@ -1,15 +1,60 @@
 import requests
 import json
-from utils.queue_utils import get_hash
+# from utils.queue_utils import get_hash
 import pandas as pd
 import time
+from typing import Sequence
+import hashlib
 
 session = requests.Session()
 
-# Utility function to fix JSON columns, ensuring lists are serialized properly
+
+def get_hash(data_dict: dict,
+             hsh_keys: Sequence,
+             print_hsh_tup: bool = False) -> str:
+    """
+    Generate a hash from a dictionary, using a subset of the keys provided in
+    `hsh_keys`. Useful for generating a unique identifier for a given set of
+    fields.
+
+    Parameters
+    ----------
+    data_dict : dict
+        Input dictionary to hash.
+    hsh_keys : Sequence
+        Sequence of keys to use when hashing.
+    print_hsh_tup : bool, optional
+        If `True`, print the tuple used to generate the hash.
+
+    Returns
+    -------
+    str
+        Hexadecimal representation of the hash.
+    """
+    assert hsh_keys, "Hash keys are empty"
+    tuple_ = tuple(data_dict[k] for k in hsh_keys)
+    tuple_str = str(tuple_)
+    if print_hsh_tup:
+        print(tuple_str)
+    return hashlib.md5(tuple_str.encode()).hexdigest()
 
 
 def fix_json_column(column_value):
+    """
+    Utility function to fix JSON columns, ensuring lists are serialized properly.
+
+    Parameters
+    ----------
+    column_value
+        The value of the column to fix. If it is a list, it will be serialized
+        into a JSON string. Otherwise, it will be returned unchanged.
+
+    Returns
+    -------
+    str
+        The fixed column value. If `column_value` was a list, this will be a
+        JSON-serialized string. Otherwise, it will be the original value.
+    """
     if isinstance(column_value, list):
         return json.dumps(column_value)
     return column_value
@@ -67,7 +112,7 @@ request_base_params = {
 all_proj_dfs = []
 
 # Loop through multiple pages of project data
-for page_num in range(1, 30):
+for page_num in range(1, 3):
     request_params = request_base_params.copy()
     request_params['page'] = str(page_num)
 
@@ -95,7 +140,8 @@ for page_num in range(1, 30):
         proj_df = proj_df.drop(['latitude', 'longitude'], axis=1)
 
     all_proj_dfs.append(proj_df)
-    time.sleep(5)  # Add delay between requests to avoid overloading the server
+    print(f'Fetched data for page {page_num}')
+    time.sleep(3)  # Add delay between requests to avoid overloading the server
 
 final_proj_df = pd.concat(all_proj_dfs, ignore_index=True)
 
@@ -110,7 +156,7 @@ final_proj_df = final_proj_df[['id', 'created_at', 'updated_at', 'name', 'descri
                                'sustaincert_id', 'sustaincert_url', 'project_developer', 'carbon_stream', 'country', 'country_code', 'state', 'programme_of_activities', 'poa_project_id', 'poa_project_sustaincert_id', 'poa_project_name', 'sustainable_development_goals', 'labels', 'hsh']]
 
 final_proj_df.to_csv(
-    '/home/shubhangi.bhatia/Desktop/calyx/main_project_details.csv', index=False)
+    './main_project_details.csv', index=False)
 
 # Loop through SustainCert URLs and download project files
 for url in final_proj_df['sustaincert_url']:
@@ -152,22 +198,6 @@ for url in final_proj_df['sustaincert_url']:
 
         for file in file_names:
             try:
-                # file_headers = {
-                #     'Accept': '*/*',
-                #     'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8,hi;q=0.7',
-                #     'Connection': 'keep-alive',
-                #     'Origin': 'https://platform.sustain-cert.com',
-                #     'Referer': 'https://platform.sustain-cert.com/',
-                #     'Sec-Fetch-Dest': 'empty',
-                #     'Sec-Fetch-Mode': 'cors',
-                #     'Sec-Fetch-Site': 'cross-site',
-                #     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-                #     'request-id': '|cc8e3d238dc84b988d588a04f8590a97.2c3d845b51414477',
-                #     'sec-ch-ua': '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
-                #     'sec-ch-ua-mobile': '?0',
-                #     'sec-ch-ua-platform': '"Linux"',
-                #     'traceparent': '00-cc8e3d238dc84b988d588a04f8590a97-2c3d845b51414477-01',
-                # }
                 file_headers = url_headers.copy()
                 file_params = {
                     'projectID': project_id,
@@ -182,7 +212,7 @@ for url in final_proj_df['sustaincert_url']:
 
                 # Save the file based on its extension
                 extension = file.split('.')[-1]
-                file_path = f'/home/shubhangi.bhatia/Desktop/calyx/project_files/{file}'
+                file_path = f'./project_files/{file}'
                 if extension in ['pdf', 'docx', 'xlsx']:
                     with open(file_path, 'wb') as f:
                         f.write(file_response.content)
@@ -191,12 +221,9 @@ for url in final_proj_df['sustaincert_url']:
                         f.write(file_response.content.decode('utf-8'))
 
             except Exception as e:
-                print(url)
-                raise
                 print(f"Failed to download {file}: {e}")
                 continue
 
     except Exception as e:
-        raise
         print(f"Error downloading files for project {project_id}: {e}")
         continue
