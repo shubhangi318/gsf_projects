@@ -177,13 +177,12 @@ SELECT
 FROM
     numbered_goals;
 ```
-Issuable Products
-\n After inserting the goals, we need to store the corresponding issuable products in the sust_issuable_products table.
+Issuable Products </br> After inserting the goals, we need to store the corresponding issuable products in the sust_issuable_products table.
 
 ```sql
 WITH json_data AS (
     SELECT
-        main_proj.hsh AS proj_hash,
+        m/br>ain_proj.hsh AS proj_hash,
         goal->>'name' AS goal_name,
         jsonb_array_elements(goal->'issuable_products') AS product
     FROM
