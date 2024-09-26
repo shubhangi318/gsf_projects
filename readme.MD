@@ -178,6 +178,7 @@ FROM
     numbered_goals;
 ```
 Issuable Products
+\n After inserting the goals, we need to store the corresponding issuable products in the sust_issuable_products table.
 
 ```sql
 WITH json_data AS (
