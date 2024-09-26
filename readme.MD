@@ -117,4 +117,17 @@ CREATE TABLE gsf_reg.proj_desc (
 CREATE INDEX idx_proj_desc_proj_hash ON gsf_reg.proj_desc(proj_hash);
 ```
 
+## Data Insertion
+
+After extracting the project details into main_project.csv, use the following command to insert the data into the main_proj_details table:
+
+```sql
+\copy gsf_reg.main_proj_details(id, created_at, updated_at, name, description, status, gsf_standards_version, estimated_annual_credits, crediting_period_start_date, crediting_period_end_date, methodology, type, size, sustaincert_id, sustaincert_url, project_developer, carbon_stream, country, country_code, state, programme_of_activities, poa_project_id, poa_project_sustaincert_id, poa_project_name, sustainable_development_goals, labels, hsh) 
+FROM '/home/shubhangi.bhatia/Desktop/calyx/main_proj.csv' 
+WITH (FORMAT csv, HEADER true, DELIMITER ',', NULL '');
+```
+
+## Normalization
+
+After e
 
