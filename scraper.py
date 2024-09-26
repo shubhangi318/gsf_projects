@@ -1,13 +1,14 @@
 import requests
 import json
-# from utils.queue_utils import get_hash
 import pandas as pd
 import time
 from typing import Sequence
 import hashlib
+from __init__ import InitInfo
+
+CONST_OBJ = InitInfo()
 
 session = requests.Session()
-
 
 def get_hash(data_dict: dict,
              hsh_keys: Sequence,
@@ -87,37 +88,21 @@ start_params = {
 session.get(
     'https://registry.goldstandard.org/projects', params=start_params, headers=start_headers)
 
-request_headers = {
-    'authority': 'public-api.goldstandard.org',
-    'accept': 'application/json, text/plain, */*',
-    'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8,hi;q=0.7',
-    'origin': 'https://registry.goldstandard.org',
-    'referer': 'https://registry.goldstandard.org/',
-    'sec-ch-ua': '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Linux"',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-site',
-    'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-}
-
-request_base_params = {
-    'query': '',
-    'size': '25',
-    'sortColumn': '',
-    'sortDirection': '',
-}
-
 all_proj_dfs = []
 
 # Loop through multiple pages of project data
 for page_num in range(1, 3):
-    request_params = request_base_params.copy()
+    PRIORITY: bool = False
+    CLEAN_CONFIG = {
+        "collection_name": 'high_court',
+        "table_name": 'assam',
+        "constraint_name": 'hsh_unique_as',
+    }
+    request_params = CONST_OBJ.request_base_params.copy()
     request_params['page'] = str(page_num)
 
     response = session.get(
-        'https://public-api.goldstandard.org/projects', params=request_params, headers=request_headers)
+        'https://public-api.goldstandard.org/projects', params=request_params, headers=CONST_OBJ.request_headers)
 
     if response.status_code != 200:
         print(
@@ -162,23 +147,6 @@ final_proj_df.to_csv(
 for url in final_proj_df['sustaincert_url']:
     project_id = url.split('/')[-1].replace('"]', '')
 
-    url_headers = {
-        'Accept': '*/*',
-        'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8,hi;q=0.7',
-        'Connection': 'keep-alive',
-        'Origin': 'https://platform.sustain-cert.com',
-        'Referer': 'https://platform.sustain-cert.com/',
-        'Sec-Fetch-Dest': 'empty',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'cross-site',
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-        'request-id': '|881c844b10d840ce91acc0d5dcb5de72.1136db9413a94074',
-        'sec-ch-ua': '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Linux"',
-        'traceparent': '00-881c844b10d840ce91acc0d5dcb5de72-1136db9413a94074-01',
-    }
-
     url_params = {
         'projectID': project_id,
     }
@@ -187,7 +155,7 @@ for url in final_proj_df['sustaincert_url']:
         url_response = session.get(
             'https://sc-platform-certification-prod.azurewebsites.net/api/document/publiclist',
             params=url_params,
-            headers=url_headers,
+            headers=CONST_OBJ.url_headers,
         )
         response_data = json.loads(url_response.text)
         file_names = [file['fileName'] for file in response_data['files']]
@@ -198,7 +166,7 @@ for url in final_proj_df['sustaincert_url']:
 
         for file in file_names:
             try:
-                file_headers = url_headers.copy()
+                file_headers = CONST_OBJ.url_headers.copy()
                 file_params = {
                     'projectID': project_id,
                     'fileName': file,
