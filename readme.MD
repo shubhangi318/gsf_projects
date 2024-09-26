@@ -129,5 +129,23 @@ WITH (FORMAT csv, HEADER true, DELIMITER ',', NULL '');
 
 ## Normalization
 
-After e
+In this section, we will populate the `proj_details` table with a subset of necessary details from the `main_proj_details` table. The following SQL command is used to insert the data:
+
+```sql
+INSERT INTO gsf_reg.proj_details (gs_id, proj_name, proj_status, proj_type, country, hsh)
+SELECT
+    CONCAT('GS', sustaincert_id) AS gs_id,
+    name AS proj_name,
+    status AS proj_status,
+    type AS proj_type,
+    country,
+    hsh
+FROM
+    gsf_reg.main_proj_details
+WHERE
+    hsh IS NOT NULL;
+```
+
+Inserting Sustainable Development Goals
+The goals from the sustainable_development_goals column in the main_proj_details table will be inserted into the sust_goals table, and each goal will have a unique sequential issue_id and proj_hash that links it back to the main table.
 
