@@ -79,4 +79,42 @@ CREATE TABLE gsf_reg.proj_details (
 ```
 Sustainable Development Goals
 
+```sql
+CREATE TABLE gsf_reg.sust_goals (
+    name      CHARACTER VARYING,
+    proj_hash CHARACTER VARYING,
+    issue_id  INTEGER
+);
+```
+Issuable Products
+
+```sql
+CREATE TABLE gsf_reg.sust_goals (
+    issue_id  INTEGER,
+    name      CHARACTER VARYING,
+    abbr      CHARACTER VARYING,
+    proj_hash CHARACTER VARYING
+);
+```
+Project Description
+
+```sql
+CREATE TABLE gsf_reg.proj_desc (
+    description              CHARACTER VARYING,
+    project_developer        CHARACTER VARYING,
+    annual_est_credits       INTEGER,
+    project_scale            CHARACTER VARYING,
+    methodology              CHARACTER VARYING,
+    credit_period_start_date TIMESTAMP WITHOUT TIME ZONE,
+    credit_period_end_date   TIMESTAMP WITHOUT TIME ZONE,
+    proj_hash                CHARACTER VARYING,
+
+    -- Define the unique constraint
+    CONSTRAINT proj_desc_proj_hash_key UNIQUE (proj_hash)
+);
+
+-- Create an index on the proj_hash column
+CREATE INDEX idx_proj_desc_proj_hash ON gsf_reg.proj_desc(proj_hash);
+```
+
 
