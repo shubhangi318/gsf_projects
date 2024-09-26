@@ -59,42 +59,24 @@ CREATE TABLE gsf_reg.main_proj_details (
 -- Create an index on the hsh column
 CREATE INDEX idx_hsh ON gsf_reg.main_proj_details(hsh);
 ```
-Project Details
 
-```sql
-CREATE TABLE gsf_reg.proj_details (
-    gs_id       CHARACTER VARYING NOT NULL,
-    proj_name   CHARACTER VARYING,
-    proj_status CHARACTER VARYING,
-    proj_type   CHARACTER VARYING,
-    country     CHARACTER VARYING,
-    hsh         CHARACTER VARYING,
-    
-    -- Define the primary key
-    CONSTRAINT proj_details_pkey PRIMARY KEY (gs_id),
-    
-    -- Define the unique constraint
-    CONSTRAINT proj_details_hsh_key UNIQUE (hsh)
-);
-```
 Sustainable Development Goals
 
 ```sql
-CREATE TABLE gsf_reg.sust_goals (
-    name      CHARACTER VARYING,
-    proj_hash CHARACTER VARYING,
-    issue_id  INTEGER
+CREATE TABLE gsf_reg.sust_goals_details (
+    goal_name VARCHAR,
+    issuable_products JSONB,
+    goal_id INTEGER
 );
-```
-Issuable Products
 
+```
+Link Table
 ```sql
-CREATE TABLE gsf_reg.sust_goals (
-    issue_id  INTEGER,
-    name      CHARACTER VARYING,
-    abbr      CHARACTER VARYING,
-    proj_hash CHARACTER VARYING
+CREATE TABLE gsf_reg.sust_goal_link (
+    proj_hash VARCHAR,
+    goal_id INT
 );
+
 ```
 Project Description
 
@@ -123,89 +105,41 @@ After extracting the project details into main_project.csv, use the following co
 
 ```sql
 \copy gsf_reg.main_proj_details(id, created_at, updated_at, name, description, status, gsf_standards_version, estimated_annual_credits, crediting_period_start_date, crediting_period_end_date, methodology, type, size, sustaincert_id, sustaincert_url, project_developer, carbon_stream, country, country_code, state, programme_of_activities, poa_project_id, poa_project_sustaincert_id, poa_project_name, sustainable_development_goals, labels, hsh) 
-FROM '/home/shubhangi.bhatia/Desktop/calyx/main_proj.csv' 
+FROM '/home/shubhangi.bhatia/Desktop/calyx/main_project_details.csv' 
 WITH (FORMAT csv, HEADER true, DELIMITER ',', NULL '');
+```
+
+The scraper also extracts the unique sustainability development goals across all projects and saves to the csv file named 'goals.csv' in the working folder. Use the following command to insert that data into the table sust_goals_details:
+
+```sql
+\copy gsf_reg.sust_goals_details(goal_name, issuable_products) FROM '/home/shubhangi.bhatia/Desktop/calyx/goals.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',', NULL '');
 ```
 
 ## Normalization
 
-The following SQL command is used to populate the `proj_details` table with a subset of necessary details from the `main_proj_details` table:
+The following SQL command is used to populate the `sust_goal_link` table which created a link of each project to its respective sustainability goals.
 
 ```sql
-INSERT INTO gsf_reg.proj_details (gs_id, proj_name, proj_status, proj_type, country, hsh)
-SELECT
-    CONCAT('GS', sustaincert_id) AS gs_id,
-    name AS proj_name,
-    status AS proj_status,
-    type AS proj_type,
-    country,
-    hsh
-FROM
-    gsf_reg.main_proj_details
-WHERE
-    hsh IS NOT NULL;
-```
-
-### Inserting Sustainable Development Goals
-
-The goals from the sustainable_development_goals column in the main_proj_details table will be inserted into the sust_goals table, and each goal will have a unique sequential issue_id and proj_hash that links it back to the main table.
-
-Sustainable Development Goals
-
-```sql
-WITH goals AS (
-    SELECT
-        goal->>'name' AS name,
-        main.hsh AS proj_hash  -- Ensure we're getting hsh from the main_proj_details
-    FROM
-        gsf_reg.main_proj_details AS main,
-        jsonb_array_elements(main.sustainable_development_goals::jsonb) AS goal
-),
-numbered_goals AS (
-    SELECT
-        name,
-        proj_hash,
-        ROW_NUMBER() OVER (PARTITION BY proj_hash ORDER BY name) AS issue_id
-    FROM
-        goals
+WITH goals_data AS (
+    -- Extract the goal names from the JSON array in the sustainable_development_goals column
+    SELECT 
+        main.hsh AS proj_hash,
+        jsonb_array_elements(main.sustainable_development_goals::jsonb)->>'name' AS goal_name
+    FROM 
+        gsf_reg.main_proj_details AS main
 )
-INSERT INTO gsf_reg.sust_goals (name, proj_hash, issue_id)
-SELECT
-    name,
-    proj_hash,
-    issue_id
-FROM
-    numbered_goals;
+INSERT INTO gsf_reg.sust_goal_link (proj_hash, goal_id)
+SELECT 
+    goals_data.proj_hash, 
+    goals_details.goal_id
+FROM 
+    goals_data
+JOIN 
+    gsf_reg.sust_goals_details AS goals_details
+    ON goals_data.goal_name = goals_details.goal_name;
 ```
-Issuable Products </br> After inserting the goals, we need to store the corresponding issuable products in the sust_issuable_products table.
 
-```sql
-WITH json_data AS (
-    SELECT
-        m/br>ain_proj.hsh AS proj_hash,
-        goal->>'name' AS goal_name,
-        jsonb_array_elements(goal->'issuable_products') AS product
-    FROM
-        gsf_reg.main_proj_details main_proj,
-        jsonb_array_elements(main_proj.sustainable_development_goals::jsonb) AS goal
-)
-INSERT INTO gsf_reg.sust_issuable_products (issue_id, name, abbr, proj_hash)
-SELECT
-    sust.issue_id,
-    json_data.product->>'name' AS name,
-    json_data.product->>'abbreviation' AS abbr,
-    json_data.proj_hash
-FROM
-    json_data
-JOIN
-    gsf_reg.sust_goals sust
-ON
-    json_data.proj_hash = sust.proj_hash
-    AND json_data.goal_name = sust.name
-WHERE
-    json_data.product IS NOT NULL
-    AND json_data.product->>'name' IS NOT NULL;
-```
+### Populating description table
 
 Project Description </br> The details related to project descriptions are stored in this table. It can be populated with the following command:
 
