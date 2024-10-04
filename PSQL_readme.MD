@@ -96,15 +96,17 @@ After extracting the project details into main_project.csv, use the following co
 
 ```sql
 \copy gsf_reg.main_proj_details(id, created_at, updated_at, name, description, status, gsf_standards_version, estimated_annual_credits, crediting_period_start_date, crediting_period_end_date, methodology, type, size, sustaincert_id, sustaincert_url, project_developer, carbon_stream, country, country_code, state, programme_of_activities, poa_project_id, poa_project_sustaincert_id, poa_project_name, sustainable_development_goals, labels, hsh, attached_certificate_files) 
-FROM '/home/shubhangi.bhatia/Desktop/calyx/main_project_details.csv' 
+FROM 'existing_path/main_project_details.csv' 
 WITH (FORMAT csv, HEADER true, DELIMITER ',', NULL '');
 ```
 
 The scraper also extracts the unique Sustainable Development Goals across all projects and saves them to a CSV file named goals.csv in the working folder. Use the following command to insert that data into the sust_goals_details table:
 
 ```sql
-\copy gsf_reg.sust_goals_details(goal_name, issuable_products, goal_id) FROM '/home/shubhangi.bhatia/Desktop/calyx/goals.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',', NULL '');
+\copy gsf_reg.sust_goals_details(goal_name, issuable_products, goal_id) FROM 'existing_path/goals.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',', NULL '');
 ```
+
+Make sure to replace the existing path with your own.
 
 ## Normalization
 
